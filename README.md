@@ -62,6 +62,48 @@ Al iniciar, la app:
 
 ---
 
+## Pruebas unitarias
+
+![Tests unitarios](diagrams/Test_unitarios.png)
+
+### Correr los tests
+
+```bash
+# Desde la raíz del proyecto
+dotnet test
+
+# Con detalle de cada test
+dotnet test --logger "console;verbosity=detailed"
+```
+
+### Resultado esperado
+
+```
+Test Run Successful.
+Total tests: 74
+     Passed: 74
+ Total time: ~0.5 Seconds
+```
+
+### Cobertura por clase
+
+| Clase bajo prueba | Archivo de tests | Tests |
+|---|---|---|
+| `PricingRules` | `tests/.../Pricing/PricingRulesTests.cs` | 14 — base, recargos, descuento, combinaciones |
+| `Reservation` (entidad) | `tests/.../Domain/ReservationEntityTests.cs` | 10 — creación, Confirm, Cancel y guards |
+| `CreateReservationValidator` | `tests/.../Validators/CreateReservationValidatorTests.cs` | 18 — cada campo y regla por separado |
+| `ReservationService` | `tests/.../Services/ReservationServiceTests.cs` | 16 — flujos felices y errores con NSubstitute |
+
+### Stack de testing
+
+| Librería | Rol |
+|----------|-----|
+| **xUnit** | Framework de pruebas |
+| **FluentAssertions** | Aserciones legibles (`result.Should().Be(...)`) |
+| **NSubstitute** | Mocks del repositorio para aislar el servicio |
+
+---
+
 ## Documentación interactiva (Swagger / Scalar)
 
 | URL | Descripción |
@@ -228,47 +270,5 @@ Created ──► Confirmed
 - `origin` ≠ `destination` (case-insensitive).
 - `serviceType`: `"standard"` o `"premium"` (case-insensitive).
 - No se permiten reservas duplicadas (mismo cliente + origen + destino + fecha + tipo).
-
----
-
-## Pruebas unitarias
-
-![Tests unitarios](diagrams/Test_unitarios.png)
-
-### Correr los tests
-
-```bash
-# Desde la raíz del proyecto
-dotnet test
-
-# Con detalle de cada test
-dotnet test --logger "console;verbosity=detailed"
-```
-
-### Resultado esperado
-
-```
-Test Run Successful.
-Total tests: 74
-     Passed: 74
- Total time: ~0.5 Seconds
-```
-
-### Cobertura por clase
-
-| Clase bajo prueba | Archivo de tests | Tests |
-|---|---|---|
-| `PricingRules` | `tests/.../Pricing/PricingRulesTests.cs` | 14 — base, recargos, descuento, combinaciones |
-| `Reservation` (entidad) | `tests/.../Domain/ReservationEntityTests.cs` | 10 — creación, Confirm, Cancel y guards |
-| `CreateReservationValidator` | `tests/.../Validators/CreateReservationValidatorTests.cs` | 18 — cada campo y regla por separado |
-| `ReservationService` | `tests/.../Services/ReservationServiceTests.cs` | 16 — flujos felices y errores con NSubstitute |
-
-### Stack de testing
-
-| Librería | Rol |
-|----------|-----|
-| **xUnit** | Framework de pruebas |
-| **FluentAssertions** | Aserciones legibles (`result.Should().Be(...)`) |
-| **NSubstitute** | Mocks del repositorio para aislar el servicio |
 
 ---
