@@ -13,6 +13,8 @@ API REST para gestión de reservas de traslados — Prueba técnica Backend .NET
 
 ### Diagrama de componentes
 
+El sistema está organizado en 4 capas con dependencias que fluyen hacia adentro. El cliente HTTP interactúa únicamente con la capa **API**, que delega la lógica al **Application Layer**. Este orquesta las reglas de negocio usando las entidades del **Domain**, mientras que **Infrastructure** implementa los contratos de persistencia y escribe en SQLite. Los tests verifican Application y Domain de forma aislada, sin tocar la base de datos.
+
 ![Diagrama de componentes](diagrams/Diagama_componentes.png)
 
 ---
@@ -231,6 +233,8 @@ Created ──► Confirmed
 
 ## Pruebas unitarias
 
+![Tests unitarios](diagrams/Test_unitarios.png)
+
 ### Correr los tests
 
 ```bash
@@ -249,8 +253,6 @@ Total tests: 74
      Passed: 74
  Total time: ~0.5 Seconds
 ```
-
-![Tests unitarios](diagrams/Test_unitarios.png)
 
 ### Cobertura por clase
 
