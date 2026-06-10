@@ -1,0 +1,308 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Polittan Reservations API",
+    "description": "Colección completa para la API de reservas de traslados.\n\n**Base URL:** `http://localhost:5000`\n\n**Instrucciones:**\n1. Importar esta colección en Postman.\n2. Seleccionar el environment `Polittan Local`.\n3. Ejecutar `POST Create Reservation` primero para obtener un `reservationId`.\n4. Las demás peticiones usan la variable `{{reservationId}}` que se setea automáticamente.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "reservationId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "Create Reservation (Standard)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('reservationId', json.id);",
+                  "    pm.test('Status is 201 Created', () => pm.response.to.have.status(201));",
+                  "    pm.test('Status field is Created', () => pm.expect(json.status).to.eql('Created'));",
+                  "    pm.test('TotalPrice is positive', () => pm.expect(json.totalPrice).to.be.above(0));",
+                  "    pm.test('reservationId saved to variable', () => pm.expect(json.id).to.be.a('string'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Juan Pérez\",\n  \"origin\": \"Bogotá\",\n  \"destination\": \"Aeropuerto El Dorado\",\n  \"date\": \"2027-04-20T10:00:00\",\n  \"passengers\": 3,\n  \"serviceType\": \"standard\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            },
+            "description": "Crea una reserva estándar con 3 pasajeros para 2027-04-20.\n\n**Precio esperado:**\n- Base: 50.000\n- +3 pasajeros: +30.000 = 80.000\n- Reserva anticipada (>2 días): × 0.95 = **76.000 COP**\n\nGuarda automáticamente el `id` en la variable `{{reservationId}}`."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Reservation (Premium)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    pm.test('Status is 201 Created', () => pm.response.to.have.status(201));",
+                  "    pm.test('ServiceType is Premium', () => pm.expect(json.serviceType).to.eql('Premium'));",
+                  "    pm.test('TotalPrice is positive', () => pm.expect(json.totalPrice).to.be.above(0));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"María García\",\n  \"origin\": \"Medellín\",\n  \"destination\": \"Aeropuerto José María Córdova\",\n  \"date\": \"2027-05-10T08:00:00\",\n  \"passengers\": 4,\n  \"serviceType\": \"premium\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            },
+            "description": "Crea una reserva premium con 4 pasajeros.\n\n**Precio esperado:**\n- Base premium: 80.000\n- +4 pasajeros: +40.000 = 120.000\n- +10% premium >3 pass: × 1.10 = 132.000\n- Descuento anticipado: × 0.95 = **125.400 COP**"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Reservation (Validation Error - Same Origin/Destination)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('Returns validation errors', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.errors).to.be.an('object');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Test User\",\n  \"origin\": \"Bogotá\",\n  \"destination\": \"Bogotá\",\n  \"date\": \"2027-04-20T10:00:00\",\n  \"passengers\": 2,\n  \"serviceType\": \"standard\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            },
+            "description": "Debe retornar **400** porque origin == destination."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Reservation (Validation Error - Passengers Out of Range)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 400 Bad Request', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Test User\",\n  \"origin\": \"Bogotá\",\n  \"destination\": \"Cali\",\n  \"date\": \"2027-04-20T10:00:00\",\n  \"passengers\": 7,\n  \"serviceType\": \"standard\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            },
+            "description": "Debe retornar **400** porque passengers=7 excede el máximo de 6."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Reservations",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is an array', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations"]
+            },
+            "description": "Retorna todas las reservas ordenadas por fecha de creación descendente."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reservation by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('ID matches', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.id).to.eql(pm.collectionVariables.get('reservationId'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/{{reservationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations", "{{reservationId}}"]
+            },
+            "description": "Obtiene una reserva por su `id`. Requiere ejecutar **Create Reservation** primero."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reservation by ID (Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404 Not Found', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/00000000-0000-0000-0000-000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations", "00000000-0000-0000-0000-000000000000"]
+            },
+            "description": "Debe retornar **404** con un GUID inexistente."
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Reservation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Status field is Confirmed', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.status).to.eql('Confirmed');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/{{reservationId}}/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations", "{{reservationId}}", "confirm"]
+            },
+            "description": "Confirma la reserva. Solo válido desde estado `Created`.\n\nSi se ejecuta dos veces retorna **422 Unprocessable Entity**."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Reservation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Status field is Cancelled', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.status).to.eql('Cancelled');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reservations/{{reservationId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservations", "{{reservationId}}", "cancel"]
+            },
+            "description": "Cancela la reserva. Válido desde `Created` o `Confirmed`.\n\nSi se ejecuta dos veces retorna **422 Unprocessable Entity**."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
